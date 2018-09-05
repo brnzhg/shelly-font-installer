@@ -37,7 +37,8 @@ import Shelly.Lifted
 default (T.Text)
 
 --TODO make fontname a type
-data AppCommand = InstallFontEntryCommand String | ShowFontStatusCommand
+data AppCommand = InstallFontEntryCommand String Bool
+                | ShowFontStatusCommand
   deriving (Show)
 
 data InstallFontException = NonemptyDirException FilePath
@@ -168,6 +169,22 @@ installFontEntry fontEntry = do
                  >> (putStrLn . show $ nde))
   rm_rf tmpPath
 
+uninstallFontEntry :: (MonadReader e m,
+                       HasFontPaths e FontPathRoot,
+                       MonadIO m,
+                       MonadSh m)
+  => FontEntry -> m ()
+uninstallFontEntry fontEntry = do
+  localPath <- localFontEntryPath fontEntry
+  isLocalInstalled <- fontEntryInstalled localPath
+  when isLocalInstalled $ rm_rf localPath
+  systemPath <- systemFontEntryPath fontEntry
+  case systemPath of
+    Nothing -> return ()
+    Just sp -> do
+      isSystemInstalled <- fontEntryInstalled sp
+      when isSystemInstalled $ rm_rf sp
+
 localFontEntryPath :: (MonadReader e m, HasFontPaths e FontPathRoot)
   => FontEntry -> m FilePath
 localFontEntryPath fontEntry =
@@ -206,7 +223,8 @@ appCommandParser =
     statusParserInfo = info (pure ShowFontStatusCommand) mempty
     installParserInfo =
       info (InstallFontEntryCommand
-             <$> OA.argument str (help "Font name" <> metavar "FONT NAME"))
+             <$> OA.argument str (help "Font name" <> metavar "FONT NAME")
+             <*> switch (short 'u' <> help "Uninstall"))
       mempty
 
 -- MonadReader m only saves from passing in a starting FontPaths, not much gained
@@ -257,9 +275,10 @@ go = do
   options <- opts >>= (liftIO . execParser)
   local (const $ options^.optionsAppConfig) $ do
     (case (options^.optionsAppCommand) of
-       InstallFontEntryCommand feName ->
+       InstallFontEntryCommand feName uninstall ->
          (case lookupFontEntry feName of
-            Just fe -> installFontEntry fe
+            Just fe -> if uninstall then uninstallFontEntry fe
+                       else installFontEntry fe
             Nothing -> liftIO . putStrLn $ feName ++ " not found")
        ShowFontStatusCommand ->
          printFontPathRoot >> (liftIO $ putStrLn "") >> fontsInstallStatus)

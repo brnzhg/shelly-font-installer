@@ -1,7 +1,6 @@
 # Shelly Font Installer
-## low in functionality, high in dependencies
 
-I pretty much just use this to install source-code-pro for dev environments
+I pretty much just use this to install source-code-pro for dev environments.
 
 Project for learning Haskell libs...
 * shelly
