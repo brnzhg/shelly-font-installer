@@ -2,7 +2,7 @@
 
 I pretty much just use this to install source-code-pro for dev environments: 
 ```bash
-sudo ./shelly_font_installer.hs install source-code-pro </code>
+sudo ./shelly_font_installer.hs install source-code-pro
 ```
 
 Project for learning Haskell libs...
