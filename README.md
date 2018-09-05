@@ -1,7 +1,7 @@
 # Shelly Font Installer
 
 I pretty much just use this to install source-code-pro for dev environments: 
-<code> sudo ./shelly_font_installer.hs install source-code-pro </code>
+* <code> sudo ./shelly_font_installer.hs install source-code-pro </code>
 
 Project for learning Haskell libs...
 * [shelly](http://hackage.haskell.org/package/shelly)
