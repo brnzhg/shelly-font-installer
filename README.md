@@ -12,7 +12,7 @@ Project for learning Haskell libs...
 * basic lenses
 
 ## Usage
-
+<div>
 shelly font installer - a dumb font installer
 
 Usage: shelly_font_installer.hs COMMAND [--localpath LOCAL FONT PATH]
@@ -32,3 +32,4 @@ Available options:
 Available commands:
   status                   
   install        
+</div>
