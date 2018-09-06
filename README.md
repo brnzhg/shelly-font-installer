@@ -1,13 +1,16 @@
 # Shelly Font Installer
 
-I pretty much just use this to install source-code-pro for dev environments.
+I pretty much just use this to install source-code-pro for dev environments: 
+```bash
+sudo ./shelly_font_installer.hs install source-code-pro
+```
 
 Project for learning Haskell libs...
-* shelly
-* optparse-applicative
-* Text.PrettyPrint.ANSI.Leijen
-* mtl
-* MonadCatch
+* [shelly](http://hackage.haskell.org/package/shelly)
+* [optparse-applicative](https://github.com/pcapriotti/optparse-applicative)
+* [Text.PrettyPrint.ANSI.Leijen](http://hackage.haskell.org/package/ansi-wl-pprint-0.6.8.2/docs/Text-PrettyPrint-ANSI-Leijen.html)
+* [mtl](http://hackage.haskell.org/package/mtl)
+* [MonadCatch](http://hackage.haskell.org/package/exceptions-0.10.0/docs/Control-Monad-Catch.html)
 * basic lenses
 
 ## Usage
