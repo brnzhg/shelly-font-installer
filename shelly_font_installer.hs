@@ -21,6 +21,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE BangPatterns #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
 import Prelude hiding (FilePath)
@@ -29,7 +30,7 @@ import qualified Data.Text as T
 import qualified Text.PrettyPrint.ANSI.Leijen as PP
 import Data.Maybe (fromMaybe)
 import Control.Monad.Reader
-import Control.Monad.Catch (Exception, MonadThrow, throwM, catch)
+import Control.Monad.Catch (Exception, MonadThrow, throwM, try)
 import Data.Typeable (Typeable)
 import Control.Lens
 import Options.Applicative as OA
@@ -154,19 +155,23 @@ installFontEntry :: (MonadReader e m,
 installFontEntry fontEntry = do
   tmpPath <- liftSh $ fontEntry^.fontEntryLoadCmd
   localPath <- localFontEntryPath fontEntry
-  liftIO -- IO implements MonadCatch, so we catch in IO and lift it
-    $ catch (shelly $ copyFontEntryToPath tmpPath localPath)
-    (\nde@(NonemptyDirException _) ->
-       putStrLn ("Failed to install " ++ fontEntry^.fontEntryName ++ " to local")
-       >> (putStrLn . show $ nde))
+  localCopyResult <-
+    liftSh $ (try $ copyFontEntryToPath tmpPath localPath
+              :: Sh (Either InstallFontException ()))
+  liftIO $ case localCopyResult of
+            Left e -> putStrLn ("Failed to install " ++ fontEntry^.fontEntryName ++ " locally")
+                      >> (putStrLn . show $ e)
+            _ -> return ()
   systemPath <- systemFontEntryPath fontEntry
   case systemPath of
     Nothing -> return ()
-    Just sp -> liftIO
-               $ catch (shelly $ copyFontEntryToPath tmpPath sp)
-               (\nde@(NonemptyDirException _) ->
-                  putStrLn ("Failed to install " ++ fontEntry^.fontEntryName ++ " to system")
-                 >> (putStrLn . show $ nde))
+    Just sp -> do
+      systemCopyResult <- liftSh $ (try $ copyFontEntryToPath tmpPath sp
+                                    :: Sh (Either InstallFontException ()))
+      liftIO $ case systemCopyResult of
+                 Left e -> putStrLn ("Failed to install " ++ fontEntry^.fontEntryName ++ " to system")
+                           >> (putStrLn . show $ e)
+                 _ -> return ()
   rm_rf tmpPath
 
 uninstallFontEntry :: (MonadReader e m,
@@ -272,7 +277,7 @@ lookupFontEntry lookupFontName =
 
 go :: (MonadReader AppConfig m,  MonadIO m, MonadSh m) => m ()
 go = do
-  options <- opts >>= (liftIO . execParser)
+  options <- opts >>= liftIO . execParser
   local (const $ options^.optionsAppConfig) $ do
     (case (options^.optionsAppCommand) of
        InstallFontEntryCommand feName uninstall ->
