@@ -111,8 +111,7 @@ getDefaultConfig = do
 
 printFontPathRoot :: (MonadReader e m,
                       HasFontPaths e FontPathRoot,
-                      MonadIO m,
-                      MonadSh m)
+                      MonadIO m)
   => m ()
 printFontPathRoot = do
   e <- ask
